@@ -4,6 +4,8 @@ where git >nul 2>nul
 if errorlevel 1 goto :nogit
 if not exist .git goto :norepo
 
+rem test videos stay on this PC only (also removes them from GitHub if added before)
+git rm -r --cached --quiet --ignore-unmatch sample_videos >nul 2>nul
 git add .
 git diff --cached --name-only | findstr /r /i "\.env$" >nul
 if not errorlevel 1 goto :envleak

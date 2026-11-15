@@ -19,6 +19,7 @@ dist/
 backend/app/static/images/*
 !backend/app/static/images/.gitkeep
 backend/check_image.png
+sample_videos/
 
 # OS / 에디터
 .DS_Store

@@ -101,6 +101,8 @@ def conn():
 
 
 def init():
+    if PG:
+        print(f"[DB] Supabase Postgres 연결 중: ...@{config.DATABASE_HINT}", flush=True)
     with conn() as c:
         for stmt in SCHEMA.format(BLOB="BYTEA" if PG else "BLOB").split(";"):
             if stmt.strip():

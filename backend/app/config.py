@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from urllib.parse import quote, unquote
 
 from dotenv import load_dotenv
 
@@ -35,7 +36,24 @@ DATA_DIR.mkdir(exist_ok=True)
 DB_PATH = DATA_DIR / "app.db"
 
 # 배포(Render)용: Supabase Postgres 연결 주소. 비어 있으면 위 SQLite 사용
-DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+def _db_url() -> str:
+    url = os.getenv("DATABASE_URL", "").strip().strip('"').strip("'")
+    if "://" not in url or "@" not in url:
+        return url
+    # 비밀번호에 ? # @ / & 같은 특수문자가 있어도 연결되도록 비밀번호만 안전한 형태로 바꿈
+    scheme, rest = url.split("://", 1)
+    userinfo, host = rest.rsplit("@", 1)
+    if ":" in userinfo:
+        user, pw = userinfo.split(":", 1)
+        if pw.startswith("[") and pw.endswith("]"):  # 대괄호를 안 지운 경우
+            pw = pw[1:-1]
+        userinfo = f"{user}:{quote(unquote(pw), safe='')}"
+    return f"{scheme}://{userinfo}@{host}"
+
+
+DATABASE_URL = _db_url()
+# 로그 확인용 (비밀번호는 가림)
+DATABASE_HINT = DATABASE_URL.split("@", 1)[-1] if "@" in DATABASE_URL else ""
 
 # 유튜브 업로드용 Google OAuth 클라이언트 ID (공개돼도 되는 값, secret 아님)
 GOOGLE_CLIENT_ID = (os.getenv("GOOGLE_CLIENT_ID") or os.getenv("VITE_GOOGLE_CLIENT_ID") or "").strip()
