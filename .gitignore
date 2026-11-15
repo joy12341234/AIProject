@@ -1,0 +1,24 @@
+# API 키 (절대 업로드 금지)
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Node
+node_modules/
+dist/
+
+# 생성 결과물
+backend/app/static/images/*
+!backend/app/static/images/.gitkeep
+backend/check_image.png
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
+.vscode/
