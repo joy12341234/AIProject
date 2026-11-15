@@ -28,3 +28,8 @@ IMAGE_QUALITY = os.getenv("IMAGE_QUALITY", "low").strip()
 
 # 키가 없으면 무조건 목업 모드
 MOCK_MODE = _bool("MOCK_MODE", True) or not OPENAI_API_KEY
+
+# 저장된 콘티·후기 (SQLite)
+DATA_DIR = BASE_DIR / "data"
+DATA_DIR.mkdir(exist_ok=True)
+DB_PATH = DATA_DIR / "app.db"

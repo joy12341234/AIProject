@@ -1,6 +1,8 @@
 # API 키 (절대 업로드 금지)
 .env
 *.env
+.env.local
+.env.*.local
 !.env.example
 
 # Python
@@ -22,3 +24,6 @@ backend/check_image.png
 .DS_Store
 Thumbs.db
 .vscode/
+
+# 저장된 콘티·후기 DB
+backend/data/

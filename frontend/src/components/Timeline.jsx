@@ -20,7 +20,10 @@ export default function Timeline({ scenes, total }) {
             title={`${s.title} (${s.duration_sec}초)`}
           >
             <span className="tl-cut">CUT {s.scene_no}</span>
-            <span className="tl-time">{fmtTime(s.duration_sec)}</span>
+            <span className="tl-time">
+              {fmtTime(s.duration_sec)}
+              {s.beat ? ` · ${s.beat}` : ""}
+            </span>
           </div>
         ))}
       </div>

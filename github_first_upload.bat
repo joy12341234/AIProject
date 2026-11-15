@@ -31,7 +31,7 @@ echo [2/4] Selecting files (.env, venv, node_modules are excluded)...
 git add .
 git diff --cached --name-only | findstr /r /i "\.env$" >nul
 if not errorlevel 1 goto :envleak
-git diff --cached --name-only
+git --no-pager diff --cached --name-only
 
 echo.
 echo [3/4] Saving...

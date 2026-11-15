@@ -12,6 +12,12 @@ if errorlevel 1 (
   echo Installing missing packages into venv...
   backend\venv\Scripts\python.exe -m pip install -r backend\requirements.txt
 )
+if not exist frontend\node_modules\lenis (
+  echo Installing frontend packages...
+  pushd frontend
+  call npm install
+  popd
+)
 start "Backend (FastAPI :8000)" /D "%~dp0backend" cmd /k "venv\Scripts\python.exe -m uvicorn app.main:app --reload --reload-dir app --port 8000"
 start "Frontend (Vite :5173)" /D "%~dp0frontend" cmd /k "npm run dev"
 timeout /t 5 >nul

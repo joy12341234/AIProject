@@ -2,7 +2,7 @@ import SceneCard from "../components/SceneCard.jsx";
 import Timeline from "../components/Timeline.jsx";
 import { fmtTime } from "../api.js";
 
-export default function Storyboard({ storyboard, plan, images, onDraw, onRemake, onBack, onNext, loading }) {
+export default function Storyboard({ storyboard, plan, images, onDraw, onRemake, onBack, onNext, loading, saveBar }) {
   const { scenes, format, total_sec, mock } = storyboard;
   const done = scenes.filter((s) => images[s.scene_no]?.status === "done").length;
 
@@ -22,9 +22,21 @@ export default function Storyboard({ storyboard, plan, images, onDraw, onRemake,
           </ul>
 
           <div className="side-hook">
-            <b>🎣 도입 훅</b>
+            <b>도입 훅</b>
             <p>{plan.hook}</p>
           </div>
+          {plan.twist && (
+            <div className="side-hook">
+              <b>재미 장치</b>
+              <p>{plan.twist}</p>
+            </div>
+          )}
+          {storyboard.direction && (
+            <div className="side-hook">
+              <b>연출 포인트</b>
+              <p>{storyboard.direction}</p>
+            </div>
+          )}
 
           <button className="btn-ghost full" onClick={onRemake} disabled={loading}>
             {loading ? "만드는 중..." : "↻ 콘티 다시 만들기"}
@@ -32,26 +44,29 @@ export default function Storyboard({ storyboard, plan, images, onDraw, onRemake,
           <button className="btn-ghost full" onClick={onBack}>
             ← 기획안 다시 고르기
           </button>
+          {saveBar}
         </aside>
 
         <section className="board-main">
           <div className="section-head glass">
             <div>
-              <h2>🎬 AI 콘티</h2>
+              <span className="micro">02 — Storyboard</span>
+              <h2>AI 콘티</h2>
               <p className="muted">
-                AI가 제안한 {scenes.length}개 장면이에요. 마음에 안 드는 컷은 그림만 다시 그릴 수 있어요.
+                훅부터 마무리까지 {scenes.length}개 컷이 이어져요. 마음에 안 드는 컷은 그림만 다시 그릴 수 있어요.
                 {mock && <span className="chip chip-mock small">샘플 결과</span>}
               </p>
             </div>
             <span className="progress">
-              🎨 {done}/{scenes.length}
+              그림 {done}/{scenes.length}
             </span>
           </div>
 
           <div className={`scene-grid ${format === "short" ? "v" : "h"}`}>
-            {scenes.map((s) => (
+            {scenes.map((s, i) => (
               <SceneCard
                 key={s.scene_no}
+                last={i === scenes.length - 1}
                 scene={s}
                 format={format}
                 image={images[s.scene_no]}
