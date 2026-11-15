@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { copyText } from "../api.js";
-import { loadGoogle, signOutGoogle, uploadToYoutube, youtubeReady } from "../youtube.js";
+import { loadGoogle, loadYoutubeConfig, signOutGoogle, uploadToYoutube, youtubeReady } from "../youtube.js";
 
 const PRIVACY = [
   ["private", "비공개"],
@@ -12,7 +12,7 @@ const mb = (n) => `${(n / 1024 / 1024).toFixed(1)}MB`;
 
 // 편집을 마친 영상을 내 유튜브 채널에 바로 올리기
 export default function YouTubeUpload({ storyboard, editing, notify }) {
-  const ready = youtubeReady();
+  const [ready, setReady] = useState(youtubeReady());
   const short = storyboard.format === "short";
   const tags = (editing?.hashtags ?? []).map((h) => h.replace(/^#/, "")).filter(Boolean);
 
@@ -30,8 +30,11 @@ export default function YouTubeUpload({ storyboard, editing, notify }) {
 
   // 로그인 도구를 미리 불러 둬야 버튼을 눌렀을 때 팝업이 막히지 않음
   useEffect(() => {
-    if (ready) loadGoogle().catch((e) => setError(e.message));
-  }, [ready]);
+    loadYoutubeConfig().then((ok) => {
+      setReady(ok);
+      if (ok) loadGoogle().catch((e) => setError(e.message));
+    });
+  }, []);
 
   useEffect(() => () => preview && URL.revokeObjectURL(preview), [preview]);
 
@@ -80,8 +83,8 @@ export default function YouTubeUpload({ storyboard, editing, notify }) {
             SETUP
           </span>
           <p>
-            아직 Google 연결 설정이 안 됐어요. 프로젝트 폴더의 <b>setup_youtube.bat</b>을 실행해 Google 클라이언트 ID를 넣은 뒤,
-            프론트엔드 서버를 다시 켜 주세요.
+            아직 Google 연결 설정이 안 됐어요. 내 PC에서는 <b>setup_youtube.bat</b>으로 클라이언트 ID를 넣고 프론트엔드 서버를 다시 켜 주세요.
+            배포 사이트에서는 Render 환경 변수 <b>GOOGLE_CLIENT_ID</b>를 확인해 주세요.
           </p>
         </div>
       ) : (

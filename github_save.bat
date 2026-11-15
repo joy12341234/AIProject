@@ -13,7 +13,7 @@ git diff --cached --quiet
 if not errorlevel 1 goto :push
 
 echo Changed files:
-git diff --cached --name-only
+git --no-pager diff --cached --name-only
 echo.
 set "MSG="
 set /p "MSG=What did you work on? (Enter = default message): "

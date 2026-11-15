@@ -33,3 +33,12 @@ MOCK_MODE = _bool("MOCK_MODE", True) or not OPENAI_API_KEY
 DATA_DIR = BASE_DIR / "data"
 DATA_DIR.mkdir(exist_ok=True)
 DB_PATH = DATA_DIR / "app.db"
+
+# 배포(Render)용: Supabase Postgres 연결 주소. 비어 있으면 위 SQLite 사용
+DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
+
+# 유튜브 업로드용 Google OAuth 클라이언트 ID (공개돼도 되는 값, secret 아님)
+GOOGLE_CLIENT_ID = (os.getenv("GOOGLE_CLIENT_ID") or os.getenv("VITE_GOOGLE_CLIENT_ID") or "").strip()
+
+# 배포 시 백엔드가 함께 보여줄 프론트 빌드 결과물
+FRONTEND_DIST = BASE_DIR.parent / "frontend" / "dist"

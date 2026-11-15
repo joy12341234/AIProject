@@ -220,7 +220,7 @@ def gallery(sort: str = "popular", format: str = "all", x_client_id: str = Heade
         args.append(format)
     order = f"{SCORE_SQL} DESC, created_at DESC" if sort == "popular" else "created_at DESC"
     with conn() as c:
-        rows = c.execute(f"SELECT * FROM ({_STATS} {where}) ORDER BY {order} LIMIT 60", args).fetchall()
+        rows = c.execute(f"SELECT * FROM ({_STATS} {where}) AS t ORDER BY {order} LIMIT 60", args).fetchall()
         totals = c.execute(
             "SELECT (SELECT COUNT(*) FROM projects WHERE shared = 1),"
             " COUNT(r.id), AVG(r.rating) FROM reviews r JOIN projects p ON p.id = r.project_id AND p.shared = 1"

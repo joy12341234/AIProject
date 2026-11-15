@@ -1,10 +1,25 @@
 // 유튜브 업로드
 // Google 로그인 토큰은 브라우저에서 받고, 영상은 브라우저 → 유튜브로 바로 전송 (우리 서버에 저장하지 않음)
-const CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || "").trim();
+let clientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID || "").trim();
 const SCOPE = "https://www.googleapis.com/auth/youtube.upload";
 const API = "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status";
 
-export const youtubeReady = () => CLIENT_ID.endsWith(".apps.googleusercontent.com");
+const valid = (id) => id.endsWith(".apps.googleusercontent.com");
+export const youtubeReady = () => valid(clientId);
+
+// 내 PC는 frontend/.env, 배포 서버는 서버 설정(/api/config)에서 클라이언트 ID를 가져옴
+let configLoad = null;
+export function loadYoutubeConfig() {
+  if (valid(clientId)) return Promise.resolve(true);
+  configLoad ??= fetch("/api/config")
+    .then((r) => (r.ok ? r.json() : {}))
+    .then((d) => {
+      clientId = (d.google_client_id || "").trim();
+      return valid(clientId);
+    })
+    .catch(() => false);
+  return configLoad;
+}
 
 let gis = null;
 export function loadGoogle() {
@@ -33,7 +48,7 @@ export function getToken() {
 
   return new Promise((resolve, reject) => {
     const client = oauth.initTokenClient({
-      client_id: CLIENT_ID,
+      client_id: clientId,
       scope: SCOPE,
       callback: (res) => {
         if (res.error) return reject(new Error(res.error === "access_denied" ? "업로드 권한을 허용하지 않았어요." : `Google 로그인 오류: ${res.error}`));

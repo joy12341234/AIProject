@@ -1,7 +1,10 @@
 from uuid import uuid4
 
-from fastapi import FastAPI, HTTPException
+import re
+
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
 from . import config, db
@@ -48,8 +51,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 생성된 콘티 이미지 제공용
-app.mount("/static", StaticFiles(directory=config.STATIC_DIR), name="static")
+MIME = {"jpg": "image/jpeg", "png": "image/png", "webp": "image/webp"}
+
+
+# 콘티 그림: DB에서 꺼내 주고, 예전에 파일로 저장된 그림도 그대로 보여줌
+@app.get("/static/images/{name}")
+def scene_image(name: str):
+    if not re.fullmatch(r"[0-9a-f]{32}\.(jpg|png|webp)", name):
+        raise HTTPException(404, "그림을 찾을 수 없어요.")
+    found = db.load_image(name)
+    if found:
+        mime, data = found
+        return Response(data, media_type=mime, headers={"Cache-Control": "public, max-age=31536000, immutable"})
+    path = config.IMAGE_DIR / name
+    if path.is_file():
+        return FileResponse(path)
+    raise HTTPException(404, "그림을 찾을 수 없어요.")
 
 
 @app.get("/api/health")
@@ -60,7 +77,14 @@ def health():
         "key_loaded": bool(config.OPENAI_API_KEY),
         "text_model": config.TEXT_MODEL,
         "image_model": config.IMAGE_MODEL,
+        "database": "postgres" if db.PG else "sqlite",
     }
+
+
+@app.get("/api/config")
+def public_config():
+    # 화면에서 쓰는 공개 설정 (비밀값은 절대 넣지 않음)
+    return {"google_client_id": config.GOOGLE_CLIENT_ID}
 
 
 @app.post("/api/plan", response_model=PlanResponse)
@@ -121,8 +145,9 @@ def create_scene_image(req: ImageRequest):
 
     prompt = image_prompt(req.scene, req.characters, req.format)
     data = generate_image(prompt, IMAGE_SIZE[req.format])
-    name = f"{uuid4().hex}.{image_ext(data)}"
-    (config.IMAGE_DIR / name).write_bytes(data)
+    ext = image_ext(data)
+    name = f"{uuid4().hex}.{ext}"
+    db.save_image(name, MIME[ext], data)
     return ImageResponse(image_url=f"/static/images/{name}", mock=False)
 
 
@@ -148,3 +173,8 @@ def create_edit_guide(req: EditRequest):
     data = chat_json(edit_messages(req), "edit_guide", EDIT_SCHEMA)
     data["cuts"] = _by_scene(data["cuts"], req.storyboard)
     return {**data, "mock": False}
+
+
+# 배포: 빌드된 화면(frontend/dist)을 같은 주소에서 제공. 반드시 맨 마지막에 등록
+if config.FRONTEND_DIST.is_dir():
+    app.mount("/", StaticFiles(directory=config.FRONTEND_DIST, html=True), name="web")
